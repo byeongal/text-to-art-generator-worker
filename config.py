@@ -17,8 +17,8 @@ class IntervalSettings(BaseSettings):
     Settings about interval
     """
 
-    task: int = Field(default=60, description="")
-    health: int = Field(default=10, description="")
+    task: int = Field(default=60, description="interval to get task from FireBase")
+    health: int = Field(default=10, description="interval to update server health status")
 
 
 class WorkerSettings(BaseSettings):
@@ -26,8 +26,10 @@ class WorkerSettings(BaseSettings):
     Settings aboout Worker
     """
 
-    worker_id: str = Field(default=None, description="")
-    worker_key: str = Field(default=None, description="")
+    worker_id: str = Field(default=None, description="worker id to identify worker")
+    worker_key: str = Field(
+        default=None, description="worker key to check permissions on worker id"
+    )
 
 
 class FirebaseSettings(BaseSettings):
@@ -35,7 +37,7 @@ class FirebaseSettings(BaseSettings):
     Settings about firebase
     """
 
-    func_url: str
+    func_url: str = Field(description="firebase functions endpoint url")
 
 
 app_settings = AppSettings()
