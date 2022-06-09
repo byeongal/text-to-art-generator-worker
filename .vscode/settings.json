@@ -1,7 +1,7 @@
 {
   "python.linting.pylintEnabled": true,
   "python.linting.enabled": true,
-  "python.linting.pylintArgs": ["--disable=C0114", "--disable=broad-except"],
+  "python.linting.pylintArgs": ["--disable=C0114", "--disable=broad-except", "--generated-members=torch.*"],
   "python.formatting.provider": "black",
   "python.formatting.blackArgs": ["--line-length=100"],
   "editor.formatOnSave": true,

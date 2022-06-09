@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from config import app_settings
-from event_handlers import register_worker_handler, update_helath
+from event_handlers import load_model, register_worker_handler, update_helath
+from settings import app_settings
 
 
 def get_app() -> FastAPI:
@@ -13,6 +13,7 @@ def get_app() -> FastAPI:
     )
     fast_api_app.add_event_handler("startup", register_worker_handler)
     fast_api_app.add_event_handler("startup", update_helath)
+    fast_api_app.add_event_handler("startup", load_model(fast_api_app))
 
     return fast_api_app
 
