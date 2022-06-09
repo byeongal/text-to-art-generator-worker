@@ -40,3 +40,15 @@ class DiffusionStepsEnum(Enum):
     STEP_250 = 250
     STEP_500 = 500
     STEP_1000 = 1000
+
+
+class TaskStatusEnum(Enum):
+    """
+    Possible Values for the `status` about task.
+    """
+
+    PENDING: str = "PENDING"
+    ASSIGNED: str = "ASSIGNED"
+    RUNNING: str = "RUNNING"
+    COMPLETED: str = "COMPLETED"
+    FAILED: str = "FAILED"

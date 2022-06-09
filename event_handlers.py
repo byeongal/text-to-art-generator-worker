@@ -7,8 +7,9 @@ import requests
 from fastapi import FastAPI
 from fastapi_utils.tasks import repeat_every
 
-from constants import ExitStatusEnum
+from constants import ExitStatusEnum, TaskStatusEnum
 from settings import firebase_settings, interval_settings, worker_settings
+from utils.inference import generate_image
 from utils.model import (
     get_normalize,
     load_clip_model,
@@ -122,3 +123,62 @@ def update_helath() -> None:
         loguru.logger.error(f"Request Error : {error}")
     except Exception as error:
         loguru.logger.error(f"Unknown Error : {error}")
+
+
+def get_task(app: FastAPI) -> Callable:
+    """
+    Event Handler to get task from Firebase
+    """
+
+    @repeat_every(seconds=interval_settings.task)
+    def interval() -> None:
+        try:
+            response = requests.post(
+                f"{firebase_settings.func_url}/getWorkerStatus",
+                headers={"accept": "application/json", "Content-Type": "application/json"},
+                data=json.dumps(
+                    {
+                        "data": {
+                            "workerId": worker_settings.worker_id,
+                            "workerKey": worker_settings.worker_key,
+                        }
+                    }
+                ),
+            )
+            if not (response.status_code == 200 and "result" in response.json()):
+                loguru.logger.error(f"Error Get Worker{worker_settings.worker_id} Status")
+                return
+            result = response.json()["result"]
+            if not "runningTaskId" in result:
+                loguru.logger.info("This worker is not currently assigned a task.")
+                return
+            running_task_id = result["runningTaskId"]
+            response = requests.post(
+                f"{firebase_settings.func_url}/getTaskStatus",
+                headers={"accept": "application/json", "Content-Type": "application/json"},
+                data=json.dumps(
+                    {
+                        "data": {
+                            "taskId": running_task_id,
+                        }
+                    }
+                ),
+            )
+            if not (response.status_code == 200 and "result" in response.json()):
+                loguru.logger.error(f"Error Get Tast{running_task_id} Status")
+                return
+            result = response.json()["result"]
+            if result["status"] != TaskStatusEnum.ASSIGNED.value:
+                loguru.logger.info(f"Task({running_task_id}) is already working on it.")
+                return
+            loguru.logger.info(f"Task({running_task_id}) Test")
+            generate_image(
+                app=app,
+                text_prompt=result["input"]["text"],
+                seed=result["input"]["seed"],
+                task_id=running_task_id,
+            )
+        except Exception as err:
+            loguru.logger.error(f"Server Error : {err}")
+
+    return interval
